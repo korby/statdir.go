@@ -2,6 +2,8 @@
 
 **File based, async stats collector for Golang.**
 
+[![wercker status](https://app.wercker.com/status/193e9b9423b15819eb9540b9e9617f00/s/ "wercker status")](https://app.wercker.com/project/bykey/193e9b9423b15819eb9540b9e9617f00)
+
 This library provides with a simple, asynchronous stats collector that writes
 collected information to local files. The idea is pretty simple: every time
 when collector gets an update for any of registered counters, it updates the
