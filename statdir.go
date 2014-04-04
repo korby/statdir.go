@@ -1,4 +1,4 @@
-package statdir
+// Copyright (c) 2014 by Kris Kovalik.
 
 /*
 This library provides with a simple, asynchronous stats collector that writes
@@ -44,6 +44,8 @@ You'll find all the data written to:
 
 Don't forget to check examples.
 */
+package statdir
+
 import (
 	"fmt"
 	"io/ioutil"
