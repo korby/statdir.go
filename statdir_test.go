@@ -69,6 +69,15 @@ func TestCollectorCollect(t *testing.T) {
 	if string(x) != "5" {
 		t.Errorf("expected to write correct value of a counter, got: %v", string(x))
 	}
+	c.Set("FOO", 20)
+	<-time.After(100 * time.Millisecond)
+	x, err = ioutil.ReadFile("tmp/FOO")
+	if err != nil {
+		t.Errorf("expected to write correct value of a counter, got error: %v", err)
+	}
+	if string(x) != "20" {
+		t.Errorf("expected to write correct value of a counter, got: %v", string(x))
+	}
 	c.Finish()
 	<-time.After(100 * time.Millisecond)
 	x, err = ioutil.ReadFile("tmp/FINISHED")

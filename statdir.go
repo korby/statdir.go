@@ -58,11 +58,13 @@ import (
 )
 
 // update contains information about single counter update.
-type update struct {
+type op struct {
+	// kind is the type of operation, can be 'i' (increment) or 's' (set).
+	kind byte
 	// name is the name of the counter.
 	name string
 	// change is the value to be added to current counter value.
-	change int64
+	value int64
 }
 
 // Collector is a statistics collector that writes to given directory.
@@ -80,7 +82,7 @@ type Collector struct {
 	// counters contains a list of used counters.
 	counters map[string]*int64
 	// ch is n underlaying channel.
-	ch chan *update
+	ch chan *op
 	// q is a quit channel.
 	q chan bool
 }
@@ -145,7 +147,17 @@ func (self *Collector) ValueOf(name string) (int64, error) {
 //
 // Returns nothing.
 func (self *Collector) Inc(name string, change int64) {
-	self.ch <- &update{name, change}
+	self.ch <- &op{'i', name, change}
+}
+
+// Set sets value of given counter.
+//
+// name  - The name of the counter to update.
+// value - The value to set.
+//
+// Returns nothing.
+func (self *Collector) Set(name string, value int64) {
+	self.ch <- &op{'s', name, value}
 }
 
 // Finish finishes stats collection. Returns nothing.
@@ -181,7 +193,7 @@ func (self *Collector) Collect() error {
 	self.startedAt = time.Now()
 	t := self.startedAt.Format(time.RFC3339)
 	ioutil.WriteFile(fS, []byte(t), 0644)
-	self.ch = make(chan *update)
+	self.ch = make(chan *op)
 	defer close(self.ch)
 	self.q = make(chan bool)
 	defer close(self.q)
@@ -193,7 +205,14 @@ func (self *Collector) Collect() error {
 			if !ok {
 				continue
 			}
-			val := atomic.AddInt64(self.counters[u.name], u.change)
+			var val int64
+			switch u.kind {
+			case 'i':
+				val = atomic.AddInt64(self.counters[u.name], u.value)
+			case 's':
+				atomic.StoreInt64(self.counters[u.name], u.value)
+				val = u.value
+			}
 			buf := []byte(strconv.FormatInt(val, 10))
 			ioutil.WriteFile(fname, buf, 0644)
 		case <-self.q:
